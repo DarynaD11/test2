@@ -4,20 +4,129 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vanilla App Template</title>
+    <title>GREEN.HARVEST</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/modern-normalize@2.0.0/modern-normalize.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="./css/styles.css" />
-  </head>
-  <body>
-    <load src="./partials/header.html" icon-path="img/sprite.svg#logo" />
 
+    <style>
+      /* Стилі для модального вікна */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.6);
+      }
+
+      .modal-content {
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        width: 300px;
+        border-radius: 5px;
+      }
+
+      .modal-content input {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 5px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header><h1>Вітання на нашому сайті!</h1></header>
+
+    <main id="news-container"></main>
+
+    <footer>
+      <button id="admin-btn">Адмін-панель</button>
+    </footer>
+
+    <!-- Модальне вікно -->
+    <div id="login-modal" class="modal">
+      <div class="modal-content">
+        <h3>Увійти як Адміністратор</h3>
+        <form id="login-form">
+          <input
+            type="password"
+            id="admin-password"
+            placeholder="Пароль"
+            required
+          />
+          <button type="submit">Увійти</button>
+        </form>
+      </div>
+    </div>
+
+    <load src="./partials/header.html" />
+
+    <!-- Loads the specified .html file -->
+    <load src="./partials/hero.html" />
     <main>
-      <!-- Loads the specified .html file -->
-      <load src="./partials/vite-promo.html" />
-      <load src="./partials/badges.html" />
+      <load src="./partials/informations.html" />
+      <load src="./partials/competitions.html" />
+      <load src="./partials/news.html" />
+      <load src="./partials/partners.html" />
     </main>
 
+    <div id="footer"></div>
     <load src="./partials/footer.html" />
+    <load src="./admin.html" />
+    <load src="./partials/mob-menu.html" />
 
-    <script type="module" src="./main.js"></script>
+    <script>
+      // Показати модальне вікно
+      document.getElementById('admin-btn').addEventListener('click', () => {
+        document.getElementById('login-modal').style.display = 'block';
+      });
+
+      // Обробка логіну
+      document
+        .getElementById('login-form')
+        .addEventListener('submit', async e => {
+          e.preventDefault();
+          const password = document.getElementById('admin-password').value;
+
+          const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ password }),
+          });
+
+          if (res.ok) {
+            window.location.href = '/admin.html';
+          } else {
+            alert('Невірний пароль!');
+          }
+        });
+
+      // Завантаження новин
+      fetch('/api/news')
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById('news-container');
+          data.forEach(news => {
+            const item = document.createElement('div');
+            item.innerHTML = `<h3>${news.title}</h3><p>${news.content}</p>`;
+            container.appendChild(item);
+          });
+        });
+    </script>
   </body>
 </html>

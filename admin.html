@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel</title>
+  </head>
+
+  <body>
+    <h1>Admin Panel</h1>
+
+    <h2>Add News</h2>
+    <form id="newsForm">
+      <div>
+        <label for="title">News Title</label>
+        <input type="text" id="title" name="title" required />
+      </div>
+      <div>
+        <label for="content">News Content</label>
+        <textarea id="content" name="content" required></textarea>
+      </div>
+      <button type="submit">Add News</button>
+    </form>
+
+    <h2>Список новин</h2>
+    <div id="admin-news-list"></div>
+
+    <form action="/admin/logout" method="POST">
+      <button type="submit">Log out</button>
+    </form>
+
+    <script>
+      const form = document.getElementById('newsForm');
+      const container = document.getElementById('admin-news-list');
+
+      // Завантаження списку новин
+      function loadNews() {
+        container.innerHTML = ''; // очищаємо старе
+        fetch('/api/news')
+          .then(res => res.json())
+          .then(newsList => {
+            newsList.forEach(news => {
+              const div = document.createElement('div');
+              div.innerHTML = `
+              <h3>${news.title}</h3>
+              <p>${news.content}</p>
+              <button class="delete-btn" data-id="${news.id}">Delete</button>
+              <hr/>
+            `;
+              container.appendChild(div);
+            });
+
+            // Додаємо обробку подій для кнопок видалення
+            const deleteButtons = document.querySelectorAll('.delete-btn');
+            deleteButtons.forEach(button => {
+              button.addEventListener('click', function () {
+                const newsId = button.getAttribute('data-id');
+                deleteNews(newsId);
+              });
+            });
+          });
+      }
+
+      // Додавання новини через JS (без перезавантаження)
+      form.addEventListener('submit', function (e) {
+        e.preventDefault(); // скасовуємо перезавантаження
+
+        const title = document.getElementById('title').value;
+        const content = document.getElementById('content').value;
+
+        fetch('/api/news/add-news', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ title, content }),
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to add news');
+            return res.text();
+          })
+          .then(() => {
+            // Очищаємо форму
+            form.reset();
+            // Перезавантажуємо список новин
+            loadNews();
+          })
+          .catch(err => alert(err.message));
+      });
+
+      // Видалення новини через fetch
+      function deleteNews(newsId) {
+        fetch(`/api/news/delete-news/${newsId}`, {
+          method: 'DELETE',
+        })
+          .then(res => {
+            if (!res.ok) throw new Error('Failed to delete news');
+            loadNews(); // Перезавантажуємо список новин
+          })
+          .catch(err => alert(err.message));
+      }
+
+      // Спочатку завантажуємо новини
+      loadNews();
+    </script>
+  </body>
+</html>
